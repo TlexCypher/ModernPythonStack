@@ -15,7 +15,7 @@ router = APIRouter()
 @router.post("/", response_model=schemas.PostResponse)
 async def create_posts(post: schemas.PostCreate, db: Session = Depends(database.get_db),
                        current_user: schemas.UserResponse = Depends(oauth2.get_current_user)):
-    new_post = models.Post(**post.model_dump())
+    new_post = models.Post(owner_id=current_user.id, **post.model_dump())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -42,10 +42,16 @@ async def get_post(id: int, db: Session = Depends(database.get_db)):
 
 
 @router.delete("/{id}")
-async def delete_post(id: int, db: Session = Depends(database.get_db)):
+async def delete_post(id: int, db: Session = Depends(database.get_db),
+                      current_user: schemas.UserResponse = Depends(oauth2.get_current_user)):
     post_query = db.query(models.Post).filter(id == models.Post.id)
-    if post_query.first() is None:
-        raise HTTPException(status_code=404, detail=f"post with id:{id} was not found.")
+    post = post_query.first()
+
+    if post is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id:{id} was not found.")
+
+    if post.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"You can't delete other person's post.")
 
     post_query.delete(synchronize_session=False)
     db.commit()
