@@ -1,5 +1,7 @@
 .idea
-app/.env
+.env
 venv/
 app/routers/__pycache__/
 app/__pycache__/
+alembic/__pycache__/
+alembic/versions/__pycache__/

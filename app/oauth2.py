@@ -1,7 +1,6 @@
 import os
 
 from jose import JWTError, jwt
-from dotenv import load_dotenv
 from fastapi import Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -9,8 +8,8 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 
 from app import schemas, database, models
+from .config import settings
 
-load_dotenv()
 # tokenURLはログインのためのエンドポイントを渡す
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/login')
 
@@ -18,15 +17,15 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl='auth/login')
 def create_access_token(data: dict):
     to_encode = data.copy()
 
-    expire = datetime.utcnow() + timedelta(minutes=int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES')))
+    expire = datetime.utcnow() + timedelta(minutes=int(settings.access_token_expire_minutes))
     to_encode.update({"exp": expire})
 
-    return jwt.encode(to_encode, os.getenv('SECRET_KEY'), algorithm=os.getenv('ALGORITHM'))
+    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
 
 
 def verify_access_token(token: str, credential_exception):
     try:
-        payload = jwt.decode(token, os.getenv("SECRET_KEY"), algorithms=[os.getenv("ALGORITHM")])
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
 
         id: int = payload.get("user_id")
         print(id)
