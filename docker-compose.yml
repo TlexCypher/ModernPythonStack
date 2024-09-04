@@ -22,7 +22,7 @@ services:
     container_name: postgres-db
     image: postgres
     environment:
-      - POSTGRES_PASSWORD=t0namp1aws
+      - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=fastapi
     volumes:
       - type: volume
