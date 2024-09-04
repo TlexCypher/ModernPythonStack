@@ -1,0 +1,38 @@
+version: '3.9'
+services:
+  app:
+    container_name: fastapi-app
+    build:
+      dockerfile: ./Dockerfile
+      context: .
+    ports: 
+      - 8000:8000
+    volumes:
+      - type: bind
+        source: .
+        target: /usr/src/app
+    env_file:
+      - ./.env
+    command: bash -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    container_name: postgres-db
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=t0namp1aws
+      - POSTGRES_DB=fastapi
+    volumes:
+      - type: volume
+        source: docker-postgres-db-volume
+        target: /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  docker-postgres-db-volume:
